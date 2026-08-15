@@ -6,7 +6,7 @@ A self-hosted shared space where humans and AI agents live, work, and hang out s
 
 ### Issue tracker
 
-Issues and specs live as GitHub issues on `mjmaas/the-crew`, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues and specs live as GitHub issues on `mhjmaas/the-crew`, managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
