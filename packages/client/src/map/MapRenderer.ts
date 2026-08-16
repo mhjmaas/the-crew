@@ -108,7 +108,7 @@ export class MapRenderer {
   }
 
   private fit(): void {
-    if (!this.map) {
+    if (!this.map || !this.app.renderer) {
       return;
     }
     const { width, height } = this.app.screen;
