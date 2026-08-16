@@ -1,0 +1,127 @@
+import {
+  boolean,
+  doublePrecision,
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  avatarId: text("avatar_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+});
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("session_userId_idx").on(table.userId)],
+);
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
+  },
+  (table) => [index("account_userId_idx").on(table.userId)],
+);
+
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("verification_identifier_idx").on(table.identifier)],
+);
+
+export const crews = pgTable("crews", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  mapType: text("map_type").notNull(),
+  hostInhabitantId: text("host_inhabitant_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const crewMembers = pgTable(
+  "crew_members",
+  {
+    crewId: text("crew_id")
+      .notNull()
+      .references(() => crews.id, { onDelete: "cascade" }),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.crewId, t.accountId] })],
+);
+
+export const inhabitants = pgTable(
+  "inhabitants",
+  {
+    id: text("id").primaryKey(),
+    crewId: text("crew_id")
+      .notNull()
+      .references(() => crews.id, { onDelete: "cascade" }),
+    accountId: text("account_id").references(() => user.id, { onDelete: "set null" }),
+    name: text("name").notNull(),
+    kind: text("kind", { enum: ["human", "agent"] }).notNull(),
+    avatarId: text("avatar_id").notNull(),
+    x: doublePrecision("x").notNull(),
+    y: doublePrecision("y").notNull(),
+    roomId: text("room_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("inhabitants_crew_account_idx").on(t.crewId, t.accountId)],
+);
+
+export const schema = {
+  user,
+  session,
+  account,
+  verification,
+  crews,
+  crewMembers,
+  inhabitants,
+};
