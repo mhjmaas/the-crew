@@ -2,6 +2,14 @@
 
 A self-hosted shared space where humans and AI agents live, work, and hang out side by side — from a crew of five friends to a digital office.
 
+## Workflow
+
+- Feature work happens on a branch, never directly on `main`.
+- Merge to `main` only via pull request.
+- The PR body must name the ticket(s) it closes (`Closes #<n>`), one per line.
+
+See `docs/agents/issue-tracker.md` for the exact commands.
+
 ## Agent skills
 
 ### Issue tracker
