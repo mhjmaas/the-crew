@@ -79,31 +79,9 @@ export async function persistCrewCreation(crew: CrewState, hostAccountId: string
   });
 }
 
-export async function persistInhabitantJoin(
-  inhabitant: InhabitantState,
-  crewId: string,
-  accountId: string | null,
-): Promise<void> {
-  await db.insert(inhabitants).values({
-    id: inhabitant.id,
-    crewId,
-    accountId,
-    name: inhabitant.name,
-    kind: inhabitant.kind,
-    avatarId: inhabitant.avatarId,
-    x: inhabitant.position.x,
-    y: inhabitant.position.y,
-    roomId: inhabitant.room,
-  });
-}
-
 export async function persistInhabitantMove(inhabitant: InhabitantState): Promise<void> {
   await db
     .update(inhabitants)
     .set({ x: inhabitant.position.x, y: inhabitant.position.y, roomId: inhabitant.room })
     .where(eq(inhabitants.id, inhabitant.id));
-}
-
-export async function persistInhabitantLeave(inhabitantId: string): Promise<void> {
-  await db.delete(inhabitants).where(eq(inhabitants.id, inhabitantId));
 }

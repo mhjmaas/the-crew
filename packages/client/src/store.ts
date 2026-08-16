@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand/react";
-import type { CrewState, MapType, WorldEvent } from "@the-crew/world-core";
+import type { CrewState, InhabitantState, MapType, WorldEvent } from "@the-crew/world-core";
 
 export interface ApiUser {
   id: string;
@@ -15,7 +15,7 @@ export interface CrewSummary {
   mapType: MapType;
 }
 
-export interface WorldState {
+export interface ViewState {
   user: ApiUser | null | undefined;
   crews: CrewSummary[];
   crew: CrewState | null;
@@ -31,8 +31,19 @@ export interface WorldState {
   leaveCrew(): void;
 }
 
+const patchInhabitant = (
+  crew: CrewState,
+  inhabitantId: string,
+  patch: (inhabitant: InhabitantState) => InhabitantState,
+): { crew: CrewState } => ({
+  crew: {
+    ...crew,
+    inhabitants: crew.inhabitants.map((i) => (i.id === inhabitantId ? patch(i) : i)),
+  },
+});
+
 export function createWorldStore() {
-  return createStore<WorldState>()((set) => ({
+  return createStore<ViewState>()((set) => ({
     user: undefined,
     crews: [],
     crew: null,
@@ -80,32 +91,17 @@ export function createWorldStore() {
               },
             };
           case "inhabitant/moved":
-            return {
-              crew: {
-                ...crew,
-                inhabitants: crew.inhabitants.map((i) =>
-                  i.id === event.inhabitantId ? { ...i, position: { ...event.position } } : i,
-                ),
-              },
-            };
+            return patchInhabitant(crew, event.inhabitantId, (i) => ({
+              ...i,
+              position: { ...event.position },
+            }));
           case "room/entered":
-            return {
-              crew: {
-                ...crew,
-                inhabitants: crew.inhabitants.map((i) =>
-                  i.id === event.inhabitantId ? { ...i, room: event.room.id } : i,
-                ),
-              },
-            };
+            return patchInhabitant(crew, event.inhabitantId, (i) => ({
+              ...i,
+              room: event.room.id,
+            }));
           case "room/left":
-            return {
-              crew: {
-                ...crew,
-                inhabitants: crew.inhabitants.map((i) =>
-                  i.id === event.inhabitantId ? { ...i, room: null } : i,
-                ),
-              },
-            };
+            return patchInhabitant(crew, event.inhabitantId, (i) => ({ ...i, room: null }));
         }
       }),
     leaveCrew: () => set({ crew: null, myInhabitantId: null, connected: false }),
@@ -114,6 +110,6 @@ export function createWorldStore() {
 
 export const worldStore = createWorldStore();
 
-export function useWorld<T>(selector: (state: WorldState) => T): T {
+export function useWorld<T>(selector: (state: ViewState) => T): T {
   return useStore(worldStore, selector);
 }

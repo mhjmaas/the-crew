@@ -35,8 +35,32 @@ const MIME: Record<string, string> = {
   ".map": "application/json",
 };
 
+const extraWsOrigins = (process.env.WS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter((s) => s.length > 0);
+
+function wsOriginAllowed(origin: string | undefined, host: string | undefined): boolean {
+  if (!origin || origin === "null") {
+    return true;
+  }
+  if (extraWsOrigins.includes(origin)) {
+    return true;
+  }
+  let url: URL;
+  try {
+    url = new URL(origin);
+  } catch {
+    return true;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return true;
+  }
+  return url.host === host;
+}
+
 export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
-  app.use("/api/*", cors({ origin: "*", credentials: true }));
+  app.use("/api/*", cors({ origin: (origin) => origin, credentials: true }));
 
   app.all("/api/auth/*", (c) => auth.handler(c.req.raw));
 
@@ -127,6 +151,9 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
   });
 
   app.get("/ws", nodeWs.upgradeWebSocket(async (c) => {
+    if (!wsOriginAllowed(c.req.header("origin"), c.req.header("host"))) {
+      return { onOpen: (_evt, ws) => ws.close(1008, "forbidden origin") };
+    }
     const crewId = c.req.query("crew");
     const session = await auth.api.getSession({ headers: c.req.raw.headers });
     if (!crewId || !session?.user) {
@@ -155,7 +182,7 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
           ws.send(JSON.stringify({ type: "snapshot", crew: current, myInhabitantId }));
         }
       },
-      onMessage(evt, ws) {
+      onMessage: async (evt, ws) => {
         let msg: unknown;
         try {
           msg = JSON.parse(String(evt.data));
@@ -192,7 +219,7 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
           const current = world.crew(crewId);
           const me = current?.inhabitants.find((i) => i.id === myInhabitantId);
           if (me) {
-            void persistInhabitantMove(me);
+            await persistInhabitantMove(me);
           }
           for (const event of events) {
             hub.broadcast(crewId, JSON.stringify({ type: "event", event }));
@@ -200,6 +227,8 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
         } catch (err) {
           if (err instanceof WorldError) {
             ws.send(JSON.stringify({ type: "error", error: err.message }));
+          } else {
+            console.error("failed to apply move", err);
           }
         }
       },
