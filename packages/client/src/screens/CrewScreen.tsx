@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { createCrew, getCrew, refreshCrews } from "../api.js";
+import { createCrew, getCrew, refreshCrews, signOut } from "../api.js";
 import { useWorld, worldStore } from "../store.js";
 
 export function CrewScreen() {
@@ -15,6 +15,15 @@ export function CrewScreen() {
   async function enter(crewId: string) {
     const { crew, myInhabitantId } = await getCrew(crewId);
     worldStore.getState().applySnapshot(crew, myInhabitantId);
+  }
+
+  async function doSignOut() {
+    try {
+      await signOut();
+    } finally {
+      worldStore.getState().leaveCrew();
+      worldStore.getState().setUser(null);
+    }
   }
 
   async function submit(event: FormEvent) {
@@ -73,6 +82,9 @@ export function CrewScreen() {
           </button>
         </form>
         {error && <p className="error">{error}</p>}
+        <button type="button" onClick={() => void doSignOut()}>
+          Sign out
+        </button>
       </div>
     </div>
   );

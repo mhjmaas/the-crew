@@ -195,8 +195,10 @@ button[type="button"] {
   color: #7fc8a9;
 }
 
-.topbar button {
+.topbar-actions {
   margin-left: auto;
+  display: flex;
+  gap: 8px;
 }
 
 .map-host {

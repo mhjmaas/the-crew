@@ -56,6 +56,10 @@ export function signIn(body: { email: string; password: string }): Promise<ApiUs
   }).then((r) => r.user);
 }
 
+export function signOut(): Promise<void> {
+  return api("/api/auth/sign-out", { method: "POST" });
+}
+
 export async function refreshCrews(): Promise<void> {
   const body = await api<{ crews: CrewSummary[] }>("/api/crews");
   worldStore.getState().setCrews(body.crews);

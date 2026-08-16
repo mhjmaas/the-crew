@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Command, WorldEvent } from "@the-crew/world-core";
-import { refreshCrews } from "../api.js";
+import { refreshCrews, signOut } from "../api.js";
 import { useWorld, worldStore } from "../store.js";
 import { connectCrewSocket, type CrewSocket } from "../ws.js";
 import { MapRenderer } from "../map/MapRenderer.js";
@@ -82,6 +82,15 @@ export function MapScreen({ crewId }: { crewId: string }) {
     void refreshCrews().catch(() => {});
   }
 
+  async function doSignOut() {
+    try {
+      await signOut();
+    } finally {
+      worldStore.getState().leaveCrew();
+      worldStore.getState().setUser(null);
+    }
+  }
+
   if (!crew) {
     return null;
   }
@@ -98,7 +107,10 @@ export function MapScreen({ crewId }: { crewId: string }) {
         </span>
         {me && <span className="me">{me.name} · {roomName ?? "open space"}</span>}
         {error && <span className="error">{error}</span>}
-        <button onClick={leave}>Leave</button>
+        <div className="topbar-actions">
+          <button onClick={leave}>Leave</button>
+          <button onClick={() => void doSignOut()}>Sign out</button>
+        </div>
       </header>
       <div ref={hostRef} className="map-host" />
     </div>
