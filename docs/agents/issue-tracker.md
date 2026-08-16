@@ -13,6 +13,22 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
+## Branching & PRs
+
+Feature work happens on a branch, never on `main`.
+
+- **Branch per ticket**: `feat/<n>-slug` (use `fix/` or `chore/` where it fits better). Create it before the first commit: `git checkout -b feat/<n>-slug`.
+- **Merge only via PR**: never push feature commits to `main`.
+- **Open a PR**: `gh pr create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
+- **Reference the ticket(s)**: the PR body must name every ticket it closes, one per line, so GitHub links and auto-closes them on merge:
+
+  ```
+  Closes #42
+  Closes #43
+  ```
+
+  If the work only partially addresses a ticket, reference it instead: `Refs #42`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
