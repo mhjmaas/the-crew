@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.8
         version: 2.5.8
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
 
   packages/client:
     dependencies:
@@ -1336,6 +1339,11 @@ packages:
     resolution: {integrity: sha512-kdJoFVv2xmayw6cY09H7AbMJMt8Jn5jdlEdXsP7AGBdF2DIptVlKlOLKXP41yPip4/a3yQPv9gVcJYI8YY04dw==}
     engines: {node: '>=16.9.0'}
 
+  husky@9.1.7:
+    resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   ismobilejs@1.1.1:
     resolution: {integrity: sha512-VaFW53yt8QO61k2WJui0dHf4SlL8lxBofUuUmwBo0ljPk0Drz2TiuDW4jo3wDcv41qy/SxrJ+VAzJ/qYqsmzRw==}
 
@@ -2505,6 +2513,8 @@ snapshots:
       js-binary-schema-parser: 2.0.3
 
   hono@4.13.1: {}
+
+  husky@9.1.7: {}
 
   ismobilejs@1.1.1: {}
 

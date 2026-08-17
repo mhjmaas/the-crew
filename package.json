@@ -12,9 +12,11 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "dev:server": "pnpm --filter @the-crew/server dev",
-    "dev:client": "pnpm --filter @the-crew/client dev"
+    "dev:client": "pnpm --filter @the-crew/client dev",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.8"
+    "@biomejs/biome": "^2.5.8",
+    "husky": "^9.1.7"
   }
 }

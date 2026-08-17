@@ -1,0 +1,5 @@
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.[jt]sx?|\.json$' || true)
+[ -n "$files" ] && {
+  biome check --write $files
+  git add $files
+}
