@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
 import type { Command, WorldEvent } from "@the-crew/world-core";
+import { useEffect, useRef } from "react";
 import { refreshCrews, signOut } from "../api.js";
-import { useWorld, worldStore } from "../store.js";
-import { connectCrewSocket, type CrewSocket } from "../ws.js";
 import { MapRenderer } from "../map/MapRenderer.js";
+import { useWorld, worldStore } from "../store.js";
+import { type CrewSocket, connectCrewSocket } from "../ws.js";
 
 export function MapScreen({ crewId }: { crewId: string }) {
   const crew = useWorld((s) => s.crew);
@@ -96,7 +96,9 @@ export function MapScreen({ crewId }: { crewId: string }) {
   }
 
   const me = crew.inhabitants.find((i) => i.id === myInhabitantId);
-  const roomName = me ? crew.map.rooms.find((r) => r.id === me.room)?.name : undefined;
+  const roomName = me
+    ? crew.map.rooms.find((r) => r.id === me.room)?.name
+    : undefined;
 
   return (
     <div className="map-screen">
@@ -105,11 +107,19 @@ export function MapScreen({ crewId }: { crewId: string }) {
         <span className={connected ? "status online" : "status"}>
           {connected ? "live" : "connecting…"}
         </span>
-        {me && <span className="me">{me.name} · {roomName ?? "open space"}</span>}
+        {me && (
+          <span className="me">
+            {me.name} · {roomName ?? "open space"}
+          </span>
+        )}
         {error && <span className="error">{error}</span>}
         <div className="topbar-actions">
-          <button onClick={leave}>Leave</button>
-          <button onClick={() => void doSignOut()}>Sign out</button>
+          <button type="button" onClick={leave}>
+            Leave
+          </button>
+          <button type="button" onClick={() => void doSignOut()}>
+            Sign out
+          </button>
         </div>
       </header>
       <div ref={hostRef} className="map-host" />

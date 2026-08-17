@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { World, WorldError, AVATARS } from "../src/index.js";
+import { describe, expect, it } from "vitest";
+import { AVATARS, World, WorldError } from "../src/index.js";
 
 function seededWorld() {
   const world = new World();
@@ -26,7 +26,12 @@ describe("inhabitant/move", () => {
     const me = world.crew("crew-1")!.inhabitants[0]!;
     expect(me.position).toEqual({ x: 100, y: 300 });
     expect(events).toEqual([
-      { type: "inhabitant/moved", crewId: "crew-1", inhabitantId: "hum-1", position: { x: 100, y: 300 } },
+      {
+        type: "inhabitant/moved",
+        crewId: "crew-1",
+        inhabitantId: "hum-1",
+        position: { x: 100, y: 300 },
+      },
     ]);
   });
 
@@ -48,9 +53,19 @@ describe("inhabitant/move", () => {
     const me = world.crew("crew-1")!.inhabitants[0]!;
     expect(me.room).toBe(meetingRoom.id);
 
-    expect(events.map((e) => e.type)).toEqual(["room/left", "inhabitant/moved", "room/entered"]);
-    expect(events[0]).toMatchObject({ type: "room/left", room: { id: startRoom } });
-    expect(events[2]).toMatchObject({ type: "room/entered", room: { id: meetingRoom.id } });
+    expect(events.map((e) => e.type)).toEqual([
+      "room/left",
+      "inhabitant/moved",
+      "room/entered",
+    ]);
+    expect(events[0]).toMatchObject({
+      type: "room/left",
+      room: { id: startRoom },
+    });
+    expect(events[2]).toMatchObject({
+      type: "room/entered",
+      room: { id: meetingRoom.id },
+    });
   });
 
   it("keeps the room when moving within it", () => {
@@ -88,16 +103,29 @@ describe("inhabitant/move", () => {
     const me = world.crew("crew-1")!.inhabitants[0]!;
     expect(me.position).toEqual({ x: 0, y: map.height });
     const moved = events.find((e) => e.type === "inhabitant/moved");
-    expect(moved).toMatchObject({ type: "inhabitant/moved", position: { x: 0, y: map.height } });
+    expect(moved).toMatchObject({
+      type: "inhabitant/moved",
+      position: { x: 0, y: map.height },
+    });
   });
 
   it("rejects moving in an unknown crew or an unknown inhabitant", () => {
     const world = seededWorld();
     expect(() =>
-      world.apply({ type: "inhabitant/move", crewId: "nope", inhabitantId: "hum-1", position: { x: 1, y: 1 } }),
+      world.apply({
+        type: "inhabitant/move",
+        crewId: "nope",
+        inhabitantId: "hum-1",
+        position: { x: 1, y: 1 },
+      }),
     ).toThrowError(WorldError);
     expect(() =>
-      world.apply({ type: "inhabitant/move", crewId: "crew-1", inhabitantId: "nope", position: { x: 1, y: 1 } }),
+      world.apply({
+        type: "inhabitant/move",
+        crewId: "crew-1",
+        inhabitantId: "nope",
+        position: { x: 1, y: 1 },
+      }),
     ).toThrowError(WorldError);
   });
 });

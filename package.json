@@ -9,7 +9,12 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "dev:server": "pnpm --filter @the-crew/server dev",
     "dev:client": "pnpm --filter @the-crew/client dev"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.8"
   }
 }

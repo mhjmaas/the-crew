@@ -1,6 +1,11 @@
-import { createStore } from "zustand/vanilla";
+import type {
+  CrewState,
+  InhabitantState,
+  MapType,
+  WorldEvent,
+} from "@the-crew/world-core";
 import { useStore } from "zustand/react";
-import type { CrewState, InhabitantState, MapType, WorldEvent } from "@the-crew/world-core";
+import { createStore } from "zustand/vanilla";
 
 export interface ApiUser {
   id: string;
@@ -38,7 +43,9 @@ const patchInhabitant = (
 ): { crew: CrewState } => ({
   crew: {
     ...crew,
-    inhabitants: crew.inhabitants.map((i) => (i.id === inhabitantId ? patch(i) : i)),
+    inhabitants: crew.inhabitants.map((i) =>
+      i.id === inhabitantId ? patch(i) : i,
+    ),
   },
 });
 
@@ -81,13 +88,17 @@ export function createWorldStore() {
               return {};
             }
             const inhabitant = { ...event.inhabitant };
-            return { crew: { ...crew, inhabitants: [...crew.inhabitants, inhabitant] } };
+            return {
+              crew: { ...crew, inhabitants: [...crew.inhabitants, inhabitant] },
+            };
           }
           case "inhabitant/left":
             return {
               crew: {
                 ...crew,
-                inhabitants: crew.inhabitants.filter((i) => i.id !== event.inhabitantId),
+                inhabitants: crew.inhabitants.filter(
+                  (i) => i.id !== event.inhabitantId,
+                ),
               },
             };
           case "inhabitant/moved":
@@ -101,10 +112,14 @@ export function createWorldStore() {
               room: event.room.id,
             }));
           case "room/left":
-            return patchInhabitant(crew, event.inhabitantId, (i) => ({ ...i, room: null }));
+            return patchInhabitant(crew, event.inhabitantId, (i) => ({
+              ...i,
+              room: null,
+            }));
         }
       }),
-    leaveCrew: () => set({ crew: null, myInhabitantId: null, connected: false }),
+    leaveCrew: () =>
+      set({ crew: null, myInhabitantId: null, connected: false }),
   }));
 }
 

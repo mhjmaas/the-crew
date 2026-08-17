@@ -1,7 +1,12 @@
-import { World, type CrewState, type InhabitantState, type MapType } from "@the-crew/world-core";
+import type {
+  CrewState,
+  InhabitantState,
+  MapType,
+  World,
+} from "@the-crew/world-core";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { crews, crewMembers, inhabitants } from "./db/schema.js";
+import { crewMembers, crews, inhabitants } from "./db/schema.js";
 
 export async function hydrateWorld(world: World): Promise<void> {
   const crewRows = await db.select().from(crews);
@@ -54,7 +59,10 @@ export async function hydrateWorld(world: World): Promise<void> {
   }
 }
 
-export async function persistCrewCreation(crew: CrewState, hostAccountId: string): Promise<void> {
+export async function persistCrewCreation(
+  crew: CrewState,
+  hostAccountId: string,
+): Promise<void> {
   const host = crew.inhabitants.find((i) => i.id === crew.hostId);
   if (!host) {
     throw new Error(`crew has no host: ${crew.id}`);
@@ -65,7 +73,9 @@ export async function persistCrewCreation(crew: CrewState, hostAccountId: string
     mapType: crew.map.type,
     hostInhabitantId: crew.hostId,
   });
-  await db.insert(crewMembers).values({ crewId: crew.id, accountId: hostAccountId });
+  await db
+    .insert(crewMembers)
+    .values({ crewId: crew.id, accountId: hostAccountId });
   await db.insert(inhabitants).values({
     id: host.id,
     crewId: crew.id,
@@ -79,9 +89,15 @@ export async function persistCrewCreation(crew: CrewState, hostAccountId: string
   });
 }
 
-export async function persistInhabitantMove(inhabitant: InhabitantState): Promise<void> {
+export async function persistInhabitantMove(
+  inhabitant: InhabitantState,
+): Promise<void> {
   await db
     .update(inhabitants)
-    .set({ x: inhabitant.position.x, y: inhabitant.position.y, roomId: inhabitant.room })
+    .set({
+      x: inhabitant.position.x,
+      y: inhabitant.position.y,
+      roomId: inhabitant.room,
+    })
     .where(eq(inhabitants.id, inhabitant.id));
 }

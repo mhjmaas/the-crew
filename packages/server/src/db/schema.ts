@@ -17,7 +17,10 @@ export const user = pgTable("user", {
   image: text("image"),
   avatarId: text("avatar_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const session = pgTable(
@@ -27,7 +30,9 @@ export const session = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     userId: text("user_id")
@@ -54,7 +59,9 @@ export const account = pgTable(
     scope: text("scope"),
     password: text("password"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()).notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );
@@ -104,7 +111,9 @@ export const inhabitants = pgTable(
     crewId: text("crew_id")
       .notNull()
       .references(() => crews.id, { onDelete: "cascade" }),
-    accountId: text("account_id").references(() => user.id, { onDelete: "set null" }),
+    accountId: text("account_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
     name: text("name").notNull(),
     kind: text("kind", { enum: ["human", "agent"] }).notNull(),
     avatarId: text("avatar_id").notNull(),
@@ -113,7 +122,9 @@ export const inhabitants = pgTable(
     roomId: text("room_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (t) => [uniqueIndex("inhabitants_crew_account_idx").on(t.crewId, t.accountId)],
+  (t) => [
+    uniqueIndex("inhabitants_crew_account_idx").on(t.crewId, t.accountId),
+  ],
 );
 
 export const schema = {

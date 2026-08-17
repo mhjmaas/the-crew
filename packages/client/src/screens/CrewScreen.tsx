@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { createCrew, getCrew, refreshCrews, signOut } from "../api.js";
 import { useWorld, worldStore } from "../store.js";
 
@@ -52,9 +52,14 @@ export function CrewScreen() {
               <li key={crew.id}>
                 <span>{crew.name}</span>
                 <button
+                  type="button"
                   onClick={() =>
                     enter(crew.id).catch((err) =>
-                      setError(err instanceof Error ? err.message : "Could not enter crew"),
+                      setError(
+                        err instanceof Error
+                          ? err.message
+                          : "Could not enter crew",
+                      ),
                     )
                   }
                 >

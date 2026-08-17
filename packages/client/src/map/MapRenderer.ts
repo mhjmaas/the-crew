@@ -1,5 +1,10 @@
+import {
+  type CrewState,
+  getAvatar,
+  type MapState,
+  type Vec2,
+} from "@the-crew/world-core";
 import { Application, Container, Graphics, Text } from "pixi.js";
-import { getAvatar, type CrewState, type MapState, type Vec2 } from "@the-crew/world-core";
 
 const ROOM_COLORS: Record<string, number> = {
   meeting: 0x46536e,
@@ -23,7 +28,11 @@ export class MapRenderer {
   constructor(private readonly host: HTMLElement) {}
 
   async init(): Promise<void> {
-    await this.app.init({ resizeTo: this.host, background: 0x1b1d22, antialias: true });
+    await this.app.init({
+      resizeTo: this.host,
+      background: 0x1b1d22,
+      antialias: true,
+    });
     if (this.destroyed) {
       this.app.destroy(true, { children: true });
       return;
@@ -40,7 +49,7 @@ export class MapRenderer {
       const local = this.world.toLocal(e.global);
       this.clickHandler({ x: local.x, y: local.y });
     });
-    this.app.ticker.add(() => this.fit());
+    this.app.ticker.add(() => this.fitView());
   }
 
   setClickHandler(handler: (pos: Vec2) => void): void {
@@ -64,7 +73,7 @@ export class MapRenderer {
       label.position.set(room.rect.x + 10, room.rect.y + 10);
       this.roomsLayer.addChild(label);
     }
-    this.fit();
+    this.fitView();
   }
 
   setInhabitants(inhabitants: CrewState["inhabitants"]): void {
@@ -107,7 +116,7 @@ export class MapRenderer {
     }
   }
 
-  private fit(): void {
+  private fitView(): void {
     if (!this.map || !this.app.renderer) {
       return;
     }
@@ -115,7 +124,8 @@ export class MapRenderer {
     if (width === 0 || height === 0) {
       return;
     }
-    const scale = Math.min(width / this.map.width, height / this.map.height) * 0.98;
+    const scale =
+      Math.min(width / this.map.width, height / this.map.height) * 0.98;
     this.world.scale.set(scale);
     this.world.position.set(
       (width - this.map.width * scale) / 2,

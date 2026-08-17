@@ -1,5 +1,5 @@
 import type { CrewState, MapType } from "@the-crew/world-core";
-import { worldStore, type ApiUser, type CrewSummary } from "./store.js";
+import { type ApiUser, type CrewSummary, worldStore } from "./store.js";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -49,7 +49,10 @@ export function signUp(body: {
   }).then((r) => r.user);
 }
 
-export function signIn(body: { email: string; password: string }): Promise<ApiUser> {
+export function signIn(body: {
+  email: string;
+  password: string;
+}): Promise<ApiUser> {
   return api<{ user: ApiUser }>("/api/auth/sign-in/email", {
     method: "POST",
     body: JSON.stringify(body),

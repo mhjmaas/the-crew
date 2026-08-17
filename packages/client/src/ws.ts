@@ -13,7 +13,10 @@ export interface CrewSocket {
   close(): void;
 }
 
-export function connectCrewSocket(crewId: string, handlers: CrewSocketHandlers): CrewSocket {
+export function connectCrewSocket(
+  crewId: string,
+  handlers: CrewSocketHandlers,
+): CrewSocket {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(
     `${protocol}://${window.location.host}/ws?crew=${encodeURIComponent(crewId)}`,

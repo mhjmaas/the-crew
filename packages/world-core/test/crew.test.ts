@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { World, WorldError, AVATARS, type MapType } from "../src/index.js";
+import { describe, expect, it } from "vitest";
+import { AVATARS, type MapType, World, WorldError } from "../src/index.js";
 
 const host = { id: "hum-1", name: "Marcel", avatarId: AVATARS[0]!.id };
 
@@ -69,7 +69,9 @@ describe("crew/create", () => {
 
   it("rejects an unavailable map type", () => {
     const world = new World();
-    expect(() => createCrew(world, { mapType: "house" })).toThrowError(WorldError);
+    expect(() => createCrew(world, { mapType: "house" })).toThrowError(
+      WorldError,
+    );
   });
 
   it("rejects an unknown avatar", () => {

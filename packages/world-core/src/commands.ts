@@ -50,9 +50,24 @@ export type WorldEvent =
     }
   | { type: "inhabitant/joined"; crewId: CrewId; inhabitant: InhabitantJoined }
   | { type: "inhabitant/left"; crewId: CrewId; inhabitantId: InhabitantId }
-  | { type: "inhabitant/moved"; crewId: CrewId; inhabitantId: InhabitantId; position: Vec2 }
-  | { type: "room/entered"; crewId: CrewId; inhabitantId: InhabitantId; room: Room }
-  | { type: "room/left"; crewId: CrewId; inhabitantId: InhabitantId; room: Room };
+  | {
+      type: "inhabitant/moved";
+      crewId: CrewId;
+      inhabitantId: InhabitantId;
+      position: Vec2;
+    }
+  | {
+      type: "room/entered";
+      crewId: CrewId;
+      inhabitantId: InhabitantId;
+      room: Room;
+    }
+  | {
+      type: "room/left";
+      crewId: CrewId;
+      inhabitantId: InhabitantId;
+      room: Room;
+    };
 
 export interface InhabitantJoined {
   id: InhabitantId;

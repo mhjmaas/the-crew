@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
 import { AVATARS } from "@the-crew/world-core";
+import { type FormEvent, useState } from "react";
 import { refreshCrews, signIn, signUp } from "../api.js";
 import { worldStore } from "../store.js";
 
@@ -77,7 +77,9 @@ export function AuthScreen() {
                   key={avatar.id}
                   type="button"
                   title={avatar.name}
-                  className={avatar.id === avatarId ? "swatch selected" : "swatch"}
+                  className={
+                    avatar.id === avatarId ? "swatch selected" : "swatch"
+                  }
                   style={{ backgroundColor: avatar.color }}
                   onClick={() => setAvatarId(avatar.id)}
                 />
@@ -93,7 +95,9 @@ export function AuthScreen() {
           type="button"
           onClick={() => setMode(mode === "sign-up" ? "sign-in" : "sign-up")}
         >
-          {mode === "sign-up" ? "Have an account? Sign in" : "New here? Create an account"}
+          {mode === "sign-up"
+            ? "Have an account? Sign in"
+            : "New here? Create an account"}
         </button>
       </form>
     </div>

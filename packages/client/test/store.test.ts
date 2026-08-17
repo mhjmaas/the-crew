@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { createWorldStore } from "../src/store.js";
 import type { CrewState, WorldEvent } from "@the-crew/world-core";
+import { describe, expect, it } from "vitest";
+import { createWorldStore } from "../src/store.js";
 
 function makeCrew(overrides: Partial<CrewState> = {}): CrewState {
   return {
@@ -11,8 +11,18 @@ function makeCrew(overrides: Partial<CrewState> = {}): CrewState {
       width: 1000,
       height: 600,
       rooms: [
-        { id: "meeting-room", name: "Meeting Room", type: "meeting", rect: { x: 0, y: 0, w: 320, h: 260 } },
-        { id: "hallway", name: "Hallway", type: "hallway", rect: { x: 0, y: 260, w: 1000, h: 80 } },
+        {
+          id: "meeting-room",
+          name: "Meeting Room",
+          type: "meeting",
+          rect: { x: 0, y: 0, w: 320, h: 260 },
+        },
+        {
+          id: "hallway",
+          name: "Hallway",
+          type: "hallway",
+          rect: { x: 0, y: 260, w: 1000, h: 80 },
+        },
       ],
     },
     hostId: "hum-1",
@@ -62,7 +72,10 @@ describe("world store", () => {
       inhabitantId: "hum-1",
       position: { x: 100, y: 100 },
     });
-    expect(store.getState().crew!.inhabitants[0]!.position).toEqual({ x: 100, y: 100 });
+    expect(store.getState().crew!.inhabitants[0]!.position).toEqual({
+      x: 100,
+      y: 100,
+    });
   });
 
   it("sets the room on room/entered", () => {
@@ -93,9 +106,24 @@ describe("world store", () => {
     const store = createWorldStore();
     store.getState().applySnapshot(makeCrew(), "hum-1");
     const events: WorldEvent[] = [
-      { type: "room/left", crewId: "crew-1", inhabitantId: "hum-1", room: hallway },
-      { type: "inhabitant/moved", crewId: "crew-1", inhabitantId: "hum-1", position: { x: 100, y: 100 } },
-      { type: "room/entered", crewId: "crew-1", inhabitantId: "hum-1", room: meetingRoom },
+      {
+        type: "room/left",
+        crewId: "crew-1",
+        inhabitantId: "hum-1",
+        room: hallway,
+      },
+      {
+        type: "inhabitant/moved",
+        crewId: "crew-1",
+        inhabitantId: "hum-1",
+        position: { x: 100, y: 100 },
+      },
+      {
+        type: "room/entered",
+        crewId: "crew-1",
+        inhabitantId: "hum-1",
+        room: meetingRoom,
+      },
     ];
     for (const event of events) {
       store.getState().applyEvent(event);
@@ -122,7 +150,11 @@ describe("world store", () => {
     });
     const inhabitants = store.getState().crew!.inhabitants;
     expect(inhabitants).toHaveLength(2);
-    expect(inhabitants[1]).toMatchObject({ id: "hum-2", name: "Ada", room: "hallway" });
+    expect(inhabitants[1]).toMatchObject({
+      id: "hum-2",
+      name: "Ada",
+      room: "hallway",
+    });
   });
 
   it("ignores a duplicate inhabitant/joined", () => {
@@ -146,7 +178,11 @@ describe("world store", () => {
   it("removes an inhabitant on inhabitant/left", () => {
     const store = createWorldStore();
     store.getState().applySnapshot(makeCrew(), "hum-1");
-    store.getState().applyEvent({ type: "inhabitant/left", crewId: "crew-1", inhabitantId: "hum-1" });
+    store.getState().applyEvent({
+      type: "inhabitant/left",
+      crewId: "crew-1",
+      inhabitantId: "hum-1",
+    });
     expect(store.getState().crew!.inhabitants).toHaveLength(0);
   });
 
@@ -161,7 +197,11 @@ describe("world store", () => {
       hostId: crew.hostId,
     });
     const s = store.getState();
-    expect(s.crew).toMatchObject({ id: "crew-1", name: "The Office", hostId: "hum-1" });
+    expect(s.crew).toMatchObject({
+      id: "crew-1",
+      name: "The Office",
+      hostId: "hum-1",
+    });
     expect(s.crew!.map).toEqual(crew.map);
     expect(s.crew!.inhabitants).toEqual([]);
   });
@@ -203,8 +243,15 @@ describe("world store", () => {
 
   it("tracks user and crews", () => {
     const store = createWorldStore();
-    store.getState().setUser({ id: "u1", name: "Marcel", email: "m@example.com", avatarId: "coral" });
-    store.getState().setCrews([{ id: "crew-1", name: "The Office", mapType: "office" }]);
+    store.getState().setUser({
+      id: "u1",
+      name: "Marcel",
+      email: "m@example.com",
+      avatarId: "coral",
+    });
+    store
+      .getState()
+      .setCrews([{ id: "crew-1", name: "The Office", mapType: "office" }]);
     const s = store.getState();
     expect(s.user).toMatchObject({ id: "u1", avatarId: "coral" });
     expect(s.crews).toHaveLength(1);

@@ -1,9 +1,9 @@
-import { Hono } from "hono";
+import { fileURLToPath } from "node:url";
 import { createAdaptorServer } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
-import { fileURLToPath } from "node:url";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { World } from "@the-crew/world-core";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { Hono } from "hono";
 import { setupApp } from "./app.js";
 import { db } from "./db/index.js";
 import { CrewHub } from "./hub.js";

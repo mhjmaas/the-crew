@@ -1,7 +1,13 @@
+import { getAvatar } from "./avatars.js";
 import type { Command, WorldEvent } from "./commands.js";
 import { WorldError } from "./errors.js";
-import { getAvatar } from "./avatars.js";
-import { clampToMap, getMapTemplate, roomAt, roomById, spawnPoint } from "./map.js";
+import {
+  clampToMap,
+  getMapTemplate,
+  roomAt,
+  roomById,
+  spawnPoint,
+} from "./map.js";
 import type { CrewState, InhabitantState, WorldState } from "./types.js";
 
 export class World {
@@ -28,9 +34,14 @@ export class World {
     return this.crews.get(crewId);
   }
 
-  private createCrew(command: Extract<Command, { type: "crew/create" }>): WorldEvent[] {
+  private createCrew(
+    command: Extract<Command, { type: "crew/create" }>,
+  ): WorldEvent[] {
     if (this.crews.has(command.crewId)) {
-      throw new WorldError("crew/exists", `crew already exists: ${command.crewId}`);
+      throw new WorldError(
+        "crew/exists",
+        `crew already exists: ${command.crewId}`,
+      );
     }
     const name = command.name.trim();
     if (!name) {
@@ -49,7 +60,13 @@ export class World {
     this.crews.set(crew.id, crew);
 
     const events: WorldEvent[] = [
-      { type: "crew/created", crewId: crew.id, name: crew.name, map: crew.map, hostId: crew.hostId },
+      {
+        type: "crew/created",
+        crewId: crew.id,
+        name: crew.name,
+        map: crew.map,
+        hostId: crew.hostId,
+      },
     ];
     events.push(
       ...this.addInhabitant(crew, {
@@ -62,17 +79,28 @@ export class World {
     return events;
   }
 
-  private joinInhabitant(command: Extract<Command, { type: "inhabitant/join" }>): WorldEvent[] {
+  private joinInhabitant(
+    command: Extract<Command, { type: "inhabitant/join" }>,
+  ): WorldEvent[] {
     const crew = this.requireCrew(command.crewId);
     return this.addInhabitant(crew, command.inhabitant);
   }
 
   private addInhabitant(
     crew: CrewState,
-    spec: { id: string; name: string; kind: "human" | "agent"; avatarId: string; position?: { x: number; y: number } },
+    spec: {
+      id: string;
+      name: string;
+      kind: "human" | "agent";
+      avatarId: string;
+      position?: { x: number; y: number };
+    },
   ): WorldEvent[] {
     if (crew.inhabitants.some((i) => i.id === spec.id)) {
-      throw new WorldError("inhabitant/exists", `inhabitant already in crew: ${spec.id}`);
+      throw new WorldError(
+        "inhabitant/exists",
+        `inhabitant already in crew: ${spec.id}`,
+      );
     }
     getAvatar(spec.avatarId);
 
@@ -105,16 +133,27 @@ export class World {
       },
     ];
     if (room) {
-      events.push({ type: "room/entered", crewId: crew.id, inhabitantId: inhabitant.id, room });
+      events.push({
+        type: "room/entered",
+        crewId: crew.id,
+        inhabitantId: inhabitant.id,
+        room,
+      });
     }
     return events;
   }
 
-  private moveInhabitant(command: Extract<Command, { type: "inhabitant/move" }>): WorldEvent[] {
+  private moveInhabitant(
+    command: Extract<Command, { type: "inhabitant/move" }>,
+  ): WorldEvent[] {
     const crew = this.requireCrew(command.crewId);
     const inhabitant = this.requireInhabitant(crew, command.inhabitantId);
 
-    const position = clampToMap(crew.map, command.position.x, command.position.y);
+    const position = clampToMap(
+      crew.map,
+      command.position.x,
+      command.position.y,
+    );
     const newRoom = roomAt(crew.map, position.x, position.y);
     const oldRoomId = inhabitant.room;
 
@@ -122,37 +161,71 @@ export class World {
     if (oldRoomId && newRoom?.id !== oldRoomId) {
       const oldRoom = roomById(crew.map, oldRoomId);
       if (oldRoom) {
-        events.push({ type: "room/left", crewId: crew.id, inhabitantId: inhabitant.id, room: oldRoom });
+        events.push({
+          type: "room/left",
+          crewId: crew.id,
+          inhabitantId: inhabitant.id,
+          room: oldRoom,
+        });
       }
     }
     inhabitant.position = position;
     inhabitant.room = newRoom ? newRoom.id : null;
-    events.push({ type: "inhabitant/moved", crewId: crew.id, inhabitantId: inhabitant.id, position });
+    events.push({
+      type: "inhabitant/moved",
+      crewId: crew.id,
+      inhabitantId: inhabitant.id,
+      position,
+    });
     if (newRoom && newRoom.id !== oldRoomId) {
-      events.push({ type: "room/entered", crewId: crew.id, inhabitantId: inhabitant.id, room: newRoom });
+      events.push({
+        type: "room/entered",
+        crewId: crew.id,
+        inhabitantId: inhabitant.id,
+        room: newRoom,
+      });
     }
     return events;
   }
 
-  private leaveInhabitant(command: Extract<Command, { type: "inhabitant/leave" }>): WorldEvent[] {
+  private leaveInhabitant(
+    command: Extract<Command, { type: "inhabitant/leave" }>,
+  ): WorldEvent[] {
     const crew = this.requireCrew(command.crewId);
-    const index = crew.inhabitants.findIndex((i) => i.id === command.inhabitantId);
+    const index = crew.inhabitants.findIndex(
+      (i) => i.id === command.inhabitantId,
+    );
     if (index === -1) {
-      throw new WorldError("inhabitant/not-found", `inhabitant not in crew: ${command.inhabitantId}`);
+      throw new WorldError(
+        "inhabitant/not-found",
+        `inhabitant not in crew: ${command.inhabitantId}`,
+      );
     }
     const [inhabitant] = crew.inhabitants.splice(index, 1);
     if (!inhabitant) {
-      throw new WorldError("inhabitant/not-found", `inhabitant not in crew: ${command.inhabitantId}`);
+      throw new WorldError(
+        "inhabitant/not-found",
+        `inhabitant not in crew: ${command.inhabitantId}`,
+      );
     }
 
     const events: WorldEvent[] = [];
     if (inhabitant.room) {
       const room = roomById(crew.map, inhabitant.room);
       if (room) {
-        events.push({ type: "room/left", crewId: crew.id, inhabitantId: inhabitant.id, room });
+        events.push({
+          type: "room/left",
+          crewId: crew.id,
+          inhabitantId: inhabitant.id,
+          room,
+        });
       }
     }
-    events.push({ type: "inhabitant/left", crewId: crew.id, inhabitantId: inhabitant.id });
+    events.push({
+      type: "inhabitant/left",
+      crewId: crew.id,
+      inhabitantId: inhabitant.id,
+    });
     return events;
   }
 
@@ -164,10 +237,16 @@ export class World {
     return crew;
   }
 
-  private requireInhabitant(crew: CrewState, inhabitantId: string): InhabitantState {
+  private requireInhabitant(
+    crew: CrewState,
+    inhabitantId: string,
+  ): InhabitantState {
     const inhabitant = crew.inhabitants.find((i) => i.id === inhabitantId);
     if (!inhabitant) {
-      throw new WorldError("inhabitant/not-found", `inhabitant not in crew: ${inhabitantId}`);
+      throw new WorldError(
+        "inhabitant/not-found",
+        `inhabitant not in crew: ${inhabitantId}`,
+      );
     }
     return inhabitant;
   }
