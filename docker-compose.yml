@@ -2,9 +2,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: thecrew
-      POSTGRES_PASSWORD: thecrew
-      POSTGRES_DB: thecrew
+      POSTGRES_USER: ${POSTGRES_USER:-thecrew}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required — set it in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-thecrew}
     ports:
       - "5432:5432"
     volumes:
