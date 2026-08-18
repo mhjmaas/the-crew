@@ -1,6 +1,7 @@
 import { type Command, roomById, type WorldEvent } from "@the-crew/world-core";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { refreshCrews, signOutAndLeave } from "../api.js";
+import { InvitePanel } from "../components/InvitePanel.js";
 import { MapRenderer } from "../map/MapRenderer.js";
 import { useWorld, worldStore } from "../store.js";
 import { type CrewSocket, connectCrewSocket } from "../ws.js";
@@ -13,6 +14,7 @@ export function MapScreen({ crewId }: { crewId: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<MapRenderer | null>(null);
   const socketRef = useRef<CrewSocket | null>(null);
+  const [invitesOpen, setInvitesOpen] = useState(false);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -88,6 +90,7 @@ export function MapScreen({ crewId }: { crewId: string }) {
 
   const me = crew.inhabitants.find((i) => i.id === myInhabitantId);
   const roomName = me?.room ? roomById(crew.map, me.room)?.name : undefined;
+  const isHost = crew.hostId === myInhabitantId;
 
   return (
     <div className="map-screen">
@@ -103,6 +106,15 @@ export function MapScreen({ crewId }: { crewId: string }) {
         )}
         {error && <span className="error">{error}</span>}
         <div className="topbar-actions">
+          {isHost && (
+            <button
+              type="button"
+              className={invitesOpen ? "active" : undefined}
+              onClick={() => setInvitesOpen((open) => !open)}
+            >
+              Invite
+            </button>
+          )}
           <button type="button" onClick={leave}>
             Leave
           </button>
@@ -111,6 +123,7 @@ export function MapScreen({ crewId }: { crewId: string }) {
           </button>
         </div>
       </header>
+      {isHost && invitesOpen && <InvitePanel crewId={crew.id} />}
       <div ref={hostRef} className="map-host" />
     </div>
   );
