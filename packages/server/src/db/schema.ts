@@ -90,6 +90,29 @@ export const crews = pgTable("crews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const crewInvites = pgTable(
+  "crew_invites",
+  {
+    id: text("id").primaryKey(),
+    crewId: text("crew_id")
+      .notNull()
+      .references(() => crews.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    createdByAccountId: text("created_by_account_id").references(
+      () => user.id,
+      {
+        onDelete: "set null",
+      },
+    ),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    revokedAt: timestamp("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("crew_invites_token_idx").on(t.token),
+    index("crew_invites_crewId_idx").on(t.crewId),
+  ],
+);
+
 export const crewMembers = pgTable(
   "crew_members",
   {
@@ -133,6 +156,7 @@ export const schema = {
   account,
   verification,
   crews,
+  crewInvites,
   crewMembers,
   inhabitants,
 };

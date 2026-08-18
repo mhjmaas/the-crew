@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import type { createNodeWebSocket } from "@hono/node-ws";
 import {
   type Command,
+  type CrewState,
   type World,
   WorldError,
   type WorldEvent,
@@ -15,7 +16,18 @@ import { type AccountUser, auth } from "./auth.js";
 import { db } from "./db/index.js";
 import { crewMembers, inhabitants } from "./db/schema.js";
 import type { CrewHub } from "./hub.js";
-import { persistCrewCreation, persistInhabitantMove } from "./world-store.js";
+import {
+  createInvite,
+  findInviteByToken,
+  type Invite,
+  listInvites,
+  revokeInvite,
+} from "./invites.js";
+import {
+  persistCrewCreation,
+  persistInhabitantJoin,
+  persistInhabitantMove,
+} from "./world-store.js";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -114,7 +126,53 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
     return rows[0]?.id ?? null;
   };
 
-  app.use("/api/crews", async (c, next) => {
+  const isHost = async (
+    crewId: string,
+    accountId: string,
+  ): Promise<boolean> => {
+    const crew = world.crew(crewId);
+    if (!crew) {
+      return false;
+    }
+    const [host] = await db
+      .select({ accountId: inhabitants.accountId })
+      .from(inhabitants)
+      .where(eq(inhabitants.id, crew.hostId));
+    return host?.accountId === accountId;
+  };
+
+  const hostGate = async (
+    c: Context,
+    crewId: string,
+  ): Promise<Response | null> => {
+    const user = c.get("user");
+    if (!(await isMember(crewId, user.id))) {
+      return c.json({ error: "not found" }, 404);
+    }
+    if (!(await isHost(crewId, user.id))) {
+      return c.json({ error: "only the host manages invites" }, 403);
+    }
+    return null;
+  };
+
+  const resolveInvite = async (
+    token: string,
+  ): Promise<{ invite: Invite; crew: CrewState } | null> => {
+    const invite = await findInviteByToken(token);
+    const crew = invite ? world.crew(invite.crewId) : undefined;
+    if (!invite || !crew) {
+      return null;
+    }
+    return { invite, crew };
+  };
+
+  const broadcastEvents = (crewId: string, events: WorldEvent[]): void => {
+    for (const event of events) {
+      hub.broadcast(crewId, JSON.stringify({ type: "event", event }));
+    }
+  };
+
+  app.use("/api/crews/*", async (c, next) => {
     const user = await requireUser(c);
     if (!user) {
       return c.json({ error: "unauthorized" }, 401);
@@ -186,6 +244,107 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
     }
     const myInhabitantId = await findMyInhabitantId(crewId, user.id);
     return c.json({ crew, myInhabitantId });
+  });
+
+  app.get("/api/crews/:id/invites", async (c) => {
+    const crewId = c.req.param("id");
+    const denied = await hostGate(c, crewId);
+    if (denied) {
+      return denied;
+    }
+    return c.json({ invites: await listInvites(crewId) });
+  });
+
+  app.post("/api/crews/:id/invites", async (c) => {
+    const crewId = c.req.param("id");
+    const denied = await hostGate(c, crewId);
+    if (denied) {
+      return denied;
+    }
+    const user = c.get("user");
+    return c.json({ invite: await createInvite(crewId, user.id) }, 201);
+  });
+
+  app.delete("/api/crews/:id/invites/:inviteId", async (c) => {
+    const crewId = c.req.param("id");
+    const denied = await hostGate(c, crewId);
+    if (denied) {
+      return denied;
+    }
+    const invite = await revokeInvite(crewId, c.req.param("inviteId"));
+    if (!invite) {
+      return c.json({ error: "invite not found" }, 404);
+    }
+    return c.body(null, 204);
+  });
+
+  app.get("/api/invites/:token", async (c) => {
+    const resolved = await resolveInvite(c.req.param("token"));
+    if (!resolved) {
+      return c.json({ error: "invite not found" }, 404);
+    }
+    return c.json({
+      crewId: resolved.crew.id,
+      crewName: resolved.crew.name,
+      active: resolved.invite.revokedAt === null,
+    });
+  });
+
+  app.post("/api/invites/:token/join", async (c) => {
+    const user = await requireUser(c);
+    if (!user) {
+      return c.json({ error: "unauthorized" }, 401);
+    }
+    const resolved = await resolveInvite(c.req.param("token"));
+    if (!resolved) {
+      return c.json({ error: "invite not found" }, 404);
+    }
+    const { invite, crew } = resolved;
+    if (invite.revokedAt) {
+      return c.json({ error: "invite has been revoked" }, 400);
+    }
+    if (await isMember(crew.id, user.id)) {
+      return c.json({ error: "you are already a member of this crew" }, 400);
+    }
+    const inhabitantId = crypto.randomUUID();
+    let events: WorldEvent[];
+    try {
+      events = world.apply({
+        type: "inhabitant/join",
+        crewId: crew.id,
+        inhabitant: {
+          id: inhabitantId,
+          name: user.name,
+          kind: "human",
+          avatarId: user.avatarId,
+        },
+      });
+    } catch (err) {
+      if (err instanceof WorldError) {
+        return c.json({ error: err.message }, 400);
+      }
+      throw err;
+    }
+    const joinedCrew = world.crew(crew.id);
+    const inhabitant = joinedCrew?.inhabitants.find(
+      (i) => i.id === inhabitantId,
+    );
+    if (!joinedCrew || !inhabitant) {
+      return c.json({ error: "internal error" }, 500);
+    }
+    try {
+      await persistInhabitantJoin(crew.id, inhabitant, user.id);
+    } catch (err) {
+      console.error("failed to persist inhabitant join", err);
+      world.apply({
+        type: "inhabitant/leave",
+        crewId: crew.id,
+        inhabitantId,
+      });
+      return c.json({ error: "internal error" }, 500);
+    }
+    broadcastEvents(crew.id, events);
+    return c.json({ crew: joinedCrew, myInhabitantId: inhabitantId });
   });
 
   app.get(
@@ -274,9 +433,7 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
             if (me) {
               await persistInhabitantMove(me);
             }
-            for (const event of events) {
-              hub.broadcast(crewId, JSON.stringify({ type: "event", event }));
-            }
+            broadcastEvents(crewId, events);
           } catch (err) {
             if (err instanceof WorldError) {
               ws.send(JSON.stringify({ type: "error", error: err.message }));

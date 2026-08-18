@@ -8,6 +8,13 @@
       "when": 1786912854394,
       "tag": "0000_misty_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787087417640,
+      "tag": "0001_broad_hannibal_king",
+      "breakpoints": true
     }
   ]
 }
