@@ -65,6 +65,23 @@ const positionColumns = (inhabitant: InhabitantState) => ({
   roomId: inhabitant.room,
 });
 
+export async function persistInhabitantJoin(
+  crewId: string,
+  inhabitant: InhabitantState,
+  accountId: string,
+): Promise<void> {
+  await db.insert(crewMembers).values({ crewId, accountId });
+  await db.insert(inhabitants).values({
+    id: inhabitant.id,
+    crewId,
+    accountId,
+    name: inhabitant.name,
+    kind: inhabitant.kind,
+    avatarId: inhabitant.avatarId,
+    ...positionColumns(inhabitant),
+  });
+}
+
 export async function persistCrewCreation(
   crew: CrewState,
   hostAccountId: string,
@@ -79,18 +96,7 @@ export async function persistCrewCreation(
     mapType: crew.map.type,
     hostInhabitantId: crew.hostId,
   });
-  await db
-    .insert(crewMembers)
-    .values({ crewId: crew.id, accountId: hostAccountId });
-  await db.insert(inhabitants).values({
-    id: host.id,
-    crewId: crew.id,
-    accountId: hostAccountId,
-    name: host.name,
-    kind: host.kind,
-    avatarId: host.avatarId,
-    ...positionColumns(host),
-  });
+  await persistInhabitantJoin(crew.id, host, hostAccountId);
 }
 
 export async function persistInhabitantMove(

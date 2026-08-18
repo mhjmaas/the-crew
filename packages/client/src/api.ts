@@ -89,3 +89,48 @@ export function getCrew(
 ): Promise<{ crew: CrewState; myInhabitantId: string | null }> {
   return api(`/api/crews/${encodeURIComponent(crewId)}`);
 }
+
+export interface Invite {
+  id: string;
+  crewId: string;
+  token: string;
+  revokedAt: string | null;
+}
+
+export interface InviteInfo {
+  crewId: string;
+  crewName: string;
+  active: boolean;
+}
+
+export function getInviteInfo(token: string): Promise<InviteInfo> {
+  return api(`/api/invites/${encodeURIComponent(token)}`);
+}
+
+export function joinInvite(
+  token: string,
+): Promise<{ crew: CrewState; myInhabitantId: string }> {
+  return api(`/api/invites/${encodeURIComponent(token)}/join`, {
+    method: "POST",
+  });
+}
+
+export function listInvites(crewId: string): Promise<Invite[]> {
+  return api<{ invites: Invite[] }>(
+    `/api/crews/${encodeURIComponent(crewId)}/invites`,
+  ).then((r) => r.invites);
+}
+
+export function createInvite(crewId: string): Promise<Invite> {
+  return api<{ invite: Invite }>(
+    `/api/crews/${encodeURIComponent(crewId)}/invites`,
+    { method: "POST" },
+  ).then((r) => r.invite);
+}
+
+export function revokeInvite(crewId: string, inviteId: string): Promise<void> {
+  return api(
+    `/api/crews/${encodeURIComponent(crewId)}/invites/${encodeURIComponent(inviteId)}`,
+    { method: "DELETE" },
+  );
+}
