@@ -63,6 +63,15 @@ export function signOut(): Promise<void> {
   return api("/api/auth/sign-out", { method: "POST" });
 }
 
+export async function signOutAndLeave(): Promise<void> {
+  try {
+    await signOut();
+  } finally {
+    worldStore.getState().leaveCrew();
+    worldStore.getState().setUser(null);
+  }
+}
+
 export async function refreshCrews(): Promise<void> {
   const body = await api<{ crews: CrewSummary[] }>("/api/crews");
   worldStore.getState().setCrews(body.crews);

@@ -14,8 +14,14 @@ import { cors } from "hono/cors";
 import { type AccountUser, auth } from "./auth.js";
 import { db } from "./db/index.js";
 import { crewMembers, inhabitants } from "./db/schema.js";
-import type { CrewHub, WsConnection } from "./hub.js";
+import type { CrewHub } from "./hub.js";
 import { persistCrewCreation, persistInhabitantMove } from "./world-store.js";
+
+declare module "hono" {
+  interface ContextVariableMap {
+    user: AccountUser;
+  }
+}
 
 type NodeWebSocket = ReturnType<typeof createNodeWebSocket>;
 
@@ -92,11 +98,33 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
     return rows.length > 0;
   };
 
-  app.get("/api/crews", async (c) => {
+  const findMyInhabitantId = async (
+    crewId: string,
+    accountId: string,
+  ): Promise<string | null> => {
+    const rows = await db
+      .select({ id: inhabitants.id })
+      .from(inhabitants)
+      .where(
+        and(
+          eq(inhabitants.crewId, crewId),
+          eq(inhabitants.accountId, accountId),
+        ),
+      );
+    return rows[0]?.id ?? null;
+  };
+
+  app.use("/api/crews", async (c, next) => {
     const user = await requireUser(c);
     if (!user) {
       return c.json({ error: "unauthorized" }, 401);
     }
+    c.set("user", user);
+    await next();
+  });
+
+  app.get("/api/crews", async (c) => {
+    const user = c.get("user");
     const rows = await db
       .select()
       .from(crewMembers)
@@ -112,10 +140,7 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
   });
 
   app.post("/api/crews", async (c) => {
-    const user = await requireUser(c);
-    if (!user) {
-      return c.json({ error: "unauthorized" }, 401);
-    }
+    const user = c.get("user");
     const body = (await c.req.json().catch(() => null)) as {
       name?: unknown;
       mapType?: unknown;
@@ -152,23 +177,15 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
   });
 
   app.get("/api/crews/:id", async (c) => {
-    const user = await requireUser(c);
-    if (!user) {
-      return c.json({ error: "unauthorized" }, 401);
-    }
+    const user = c.get("user");
     const crewId = c.req.param("id");
     const crew = world.crew(crewId);
     const member = await isMember(crewId, user.id);
     if (!crew || !member) {
       return c.json({ error: "not found" }, 404);
     }
-    const myRows = await db
-      .select({ id: inhabitants.id })
-      .from(inhabitants)
-      .where(
-        and(eq(inhabitants.crewId, crewId), eq(inhabitants.accountId, user.id)),
-      );
-    return c.json({ crew, myInhabitantId: myRows[0]?.id ?? null });
+    const myInhabitantId = await findMyInhabitantId(crewId, user.id);
+    return c.json({ crew, myInhabitantId });
   });
 
   app.get(
@@ -178,26 +195,16 @@ export function setupApp(app: Hono, { world, hub, nodeWs }: AppDeps): void {
         return { onOpen: (_evt, ws) => ws.close(1008, "forbidden origin") };
       }
       const crewId = c.req.query("crew");
-      const session = await auth.api.getSession({ headers: c.req.raw.headers });
-      if (!crewId || !session?.user) {
+      const user = await requireUser(c);
+      if (!crewId || !user) {
         return { onOpen: (_evt, ws) => ws.close(1008, "unauthorized") };
       }
-      const user = session.user as unknown as AccountUser;
       const crew = world.crew(crewId);
       const member = await isMember(crewId, user.id);
       if (!crew || !member) {
         return { onOpen: (_evt, ws) => ws.close(1008, "forbidden") };
       }
-      const myRows = await db
-        .select()
-        .from(inhabitants)
-        .where(
-          and(
-            eq(inhabitants.crewId, crewId),
-            eq(inhabitants.accountId, user.id),
-          ),
-        );
-      const myInhabitantId = myRows[0]?.id;
+      const myInhabitantId = await findMyInhabitantId(crewId, user.id);
       if (!myInhabitantId) {
         return { onOpen: (_evt, ws) => ws.close(1011, "no inhabitant") };
       }

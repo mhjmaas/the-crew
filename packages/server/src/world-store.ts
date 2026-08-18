@@ -59,6 +59,12 @@ export async function hydrateWorld(world: World): Promise<void> {
   }
 }
 
+const positionColumns = (inhabitant: InhabitantState) => ({
+  x: inhabitant.position.x,
+  y: inhabitant.position.y,
+  roomId: inhabitant.room,
+});
+
 export async function persistCrewCreation(
   crew: CrewState,
   hostAccountId: string,
@@ -83,9 +89,7 @@ export async function persistCrewCreation(
     name: host.name,
     kind: host.kind,
     avatarId: host.avatarId,
-    x: host.position.x,
-    y: host.position.y,
-    roomId: host.room,
+    ...positionColumns(host),
   });
 }
 
@@ -94,10 +98,6 @@ export async function persistInhabitantMove(
 ): Promise<void> {
   await db
     .update(inhabitants)
-    .set({
-      x: inhabitant.position.x,
-      y: inhabitant.position.y,
-      roomId: inhabitant.room,
-    })
+    .set(positionColumns(inhabitant))
     .where(eq(inhabitants.id, inhabitant.id));
 }

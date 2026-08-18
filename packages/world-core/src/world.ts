@@ -8,7 +8,13 @@ import {
   roomById,
   spawnPoint,
 } from "./map.js";
-import type { CrewState, InhabitantState, WorldState } from "./types.js";
+import type {
+  CrewState,
+  InhabitantId,
+  InhabitantState,
+  RoomId,
+  WorldState,
+} from "./types.js";
 
 export class World {
   private readonly crews = new Map<string, CrewState>();
@@ -159,14 +165,9 @@ export class World {
 
     const events: WorldEvent[] = [];
     if (oldRoomId && newRoom?.id !== oldRoomId) {
-      const oldRoom = roomById(crew.map, oldRoomId);
-      if (oldRoom) {
-        events.push({
-          type: "room/left",
-          crewId: crew.id,
-          inhabitantId: inhabitant.id,
-          room: oldRoom,
-        });
+      const left = this.roomLeftEvent(crew, inhabitant.id, oldRoomId);
+      if (left) {
+        events.push(left);
       }
     }
     inhabitant.position = position;
@@ -210,16 +211,9 @@ export class World {
     }
 
     const events: WorldEvent[] = [];
-    if (inhabitant.room) {
-      const room = roomById(crew.map, inhabitant.room);
-      if (room) {
-        events.push({
-          type: "room/left",
-          crewId: crew.id,
-          inhabitantId: inhabitant.id,
-          room,
-        });
-      }
+    const left = this.roomLeftEvent(crew, inhabitant.id, inhabitant.room);
+    if (left) {
+      events.push(left);
     }
     events.push({
       type: "inhabitant/left",
@@ -227,6 +221,26 @@ export class World {
       inhabitantId: inhabitant.id,
     });
     return events;
+  }
+
+  private roomLeftEvent(
+    crew: CrewState,
+    inhabitantId: InhabitantId,
+    roomId: RoomId | null,
+  ): WorldEvent | null {
+    if (!roomId) {
+      return null;
+    }
+    const room = roomById(crew.map, roomId);
+    if (!room) {
+      return null;
+    }
+    return {
+      type: "room/left",
+      crewId: crew.id,
+      inhabitantId,
+      room,
+    };
   }
 
   private requireCrew(crewId: string): CrewState {

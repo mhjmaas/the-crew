@@ -1,6 +1,6 @@
-import type { Command, WorldEvent } from "@the-crew/world-core";
+import { type Command, roomById, type WorldEvent } from "@the-crew/world-core";
 import { useEffect, useRef } from "react";
-import { refreshCrews, signOut } from "../api.js";
+import { refreshCrews, signOutAndLeave } from "../api.js";
 import { MapRenderer } from "../map/MapRenderer.js";
 import { useWorld, worldStore } from "../store.js";
 import { type CrewSocket, connectCrewSocket } from "../ws.js";
@@ -82,23 +82,12 @@ export function MapScreen({ crewId }: { crewId: string }) {
     void refreshCrews().catch(() => {});
   }
 
-  async function doSignOut() {
-    try {
-      await signOut();
-    } finally {
-      worldStore.getState().leaveCrew();
-      worldStore.getState().setUser(null);
-    }
-  }
-
   if (!crew) {
     return null;
   }
 
   const me = crew.inhabitants.find((i) => i.id === myInhabitantId);
-  const roomName = me
-    ? crew.map.rooms.find((r) => r.id === me.room)?.name
-    : undefined;
+  const roomName = me?.room ? roomById(crew.map, me.room)?.name : undefined;
 
   return (
     <div className="map-screen">
@@ -117,7 +106,7 @@ export function MapScreen({ crewId }: { crewId: string }) {
           <button type="button" onClick={leave}>
             Leave
           </button>
-          <button type="button" onClick={() => void doSignOut()}>
+          <button type="button" onClick={() => void signOutAndLeave()}>
             Sign out
           </button>
         </div>
