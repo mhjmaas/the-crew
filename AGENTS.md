@@ -11,6 +11,11 @@ A self-hosted shared space where humans and AI agents live, work, and hang out s
 
 See `docs/agents/issue-tracker.md` for the exact commands.
 
+## Coding style
+
+- A behaviour has one home: when the same logic appears in a second place, extract the shared one.
+- A class owns one job: split it when it accrues a second.
+
 ## Agent skills
 
 ### Issue tracker
