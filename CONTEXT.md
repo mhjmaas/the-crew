@@ -59,7 +59,7 @@ How proactively an Agent participates in its space, from on-demand (only when ad
 _Avoid_: autonomy, awareness
 
 **Avatar**:
-An inhabitant's visual representation in the Map, chosen from a built-in sprite set or a custom uploaded image.
+An inhabitant's visual representation in the Map. Built-in avatars are animated pixel-art humans with idle and walk cycles; custom avatars are uploaded images.
 _Avoid_: skin, character, sprite
 
 **Action**:
