@@ -6,7 +6,7 @@ export interface Avatar {
   color: string;
 }
 
-export const AVATARS: readonly Avatar[] = [
+export const AVATARS: readonly [Avatar, ...Avatar[]] = [
   { id: "coral", name: "Coral", color: "#e07856" },
   { id: "mint", name: "Mint", color: "#7fc8a9" },
   { id: "sky", name: "Sky", color: "#6aa9e0" },

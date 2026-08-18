@@ -8,7 +8,7 @@ export function AuthScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [avatarId, setAvatarId] = useState(AVATARS[0]!.id);
+  const [avatarId, setAvatarId] = useState(AVATARS[0].id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
