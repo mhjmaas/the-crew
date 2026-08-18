@@ -1,0 +1,23 @@
+{
+  "name": "the-crew",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "dev:server": "pnpm --filter @the-crew/server dev",
+    "dev:client": "pnpm --filter @the-crew/client dev",
+    "dev": "pnpm --parallel --stream -r dev",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
+    "husky": "^9.1.7"
+  }
+}
