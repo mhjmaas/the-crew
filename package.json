@@ -13,6 +13,7 @@
     "lint:fix": "biome check --write .",
     "dev:server": "pnpm --filter @the-crew/server dev",
     "dev:client": "pnpm --filter @the-crew/client dev",
+    "dev": "pnpm --parallel --stream -r dev",
     "prepare": "husky"
   },
   "devDependencies": {
