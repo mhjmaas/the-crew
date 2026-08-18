@@ -162,6 +162,11 @@ button[type="button"] {
   min-width: 0;
 }
 
+.create-crew select {
+  flex: none;
+  width: 104px;
+}
+
 .map-screen {
   height: 100%;
   display: flex;
