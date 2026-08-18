@@ -7,7 +7,7 @@ A self-hosted shared space where humans and AI agents live, work, and hang out s
 - Feature work happens on a branch, never directly on `main`.
 - Merge to `main` only via pull request.
 - The PR body must name the ticket(s) it closes (`Closes #<n>`), one per line.
-- Never commit on your own, always ask the user for permission to commit first.
+- Never commit on your own, always ask the user for permission to commit first — except when a loaded skill's workflow explicitly includes committing as a step (e.g. `/implement`); that counts as permission for that task.
 
 See `docs/agents/issue-tracker.md` for the exact commands.
 
